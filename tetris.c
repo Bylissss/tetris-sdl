@@ -14,8 +14,17 @@ char score_str[32];
 int display_width;
 int display_height;
 
-int window_width = 360 * 1.5;
-int window_height = 640 * 1.5;
+#define WINDOW_WIDTH 360 * 1.5
+#define WINDOW_HEIGHT 640 * 1.5
+
+SDL_FPoint borders[4] = { { WINDOW_WIDTH / 10 , WINDOW_HEIGHT / 10 }, 
+						  { WINDOW_WIDTH / 10 , WINDOW_HEIGHT / 10 * 9 } ,
+						  { WINDOW_WIDTH / 10 * 9 , WINDOW_HEIGHT / 10 * 9 },
+						  { WINDOW_WIDTH / 10 * 9 , WINDOW_HEIGHT / 10  }
+ };
+
+
+int grid[10][20] = {0};
 
 int state = 0; // NONE
 // ENUMS
@@ -39,7 +48,7 @@ void update_score(){
 }
 
 void window_to_center(SDL_Window* window){
-	SDL_SetWindowPosition(window, display_width/2 - window_width/2, display_height/2 - window_height/2 );
+	SDL_SetWindowPosition(window, display_width/2 - WINDOW_WIDTH / 2, display_height/2 - WINDOW_HEIGHT/2 );
 }
 
 void tetris_deinit(){
@@ -51,7 +60,7 @@ void tetris_deinit(){
 }
 
 void window_init(){
-	window = SDL_CreateWindow("tetris", window_width, window_height, 0);
+	window = SDL_CreateWindow("tetris", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
 	if(!window){
 		SDL_Log("Window Init failed! exiting");
 		tetris_deinit();
@@ -85,6 +94,10 @@ void tetris_init(){
 	
 }
 
+void logic_init(){
+
+}
+
 void logic_loop(){
 	update_score();
 }
@@ -99,7 +112,12 @@ void render_loop(){
 
 	SDL_SetRenderScale(renderer, 4.0f, 4.0f);
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	SDL_RenderDebugText(renderer, window_width / 2 / 4.5f, window_height / 10 / 4.5f, score_str);
+	SDL_RenderDebugText(renderer, WINDOW_WIDTH / 2 / 4.3f, WINDOW_HEIGHT / 10 / 4.3f, score_str);
+	SDL_SetRenderScale(renderer, 1.0f, 1.0f);
+
+	// Lines(
+
+	SDL_RenderLines(renderer, borders, SDL_arraysize(borders) );
 
 	// Render
 
