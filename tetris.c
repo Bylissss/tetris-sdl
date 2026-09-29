@@ -1,76 +1,46 @@
 #include "SDL3/SDL.h"
+#include "stdio.h"
+
+// GLOBALS
 
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_DisplayMode* mode;
 SDL_Event event;
 
-static int display_width;
-static int display_height;
+int score = 0;
+char score_str[32];
 
-const int window_width = 480;
-const int window_height = 640;
+int display_width;
+int display_height;
 
-void window2center(SDL_Window* window){
-	SDL_SetWindowPosition(window, display_width/2 , display_height/2 );
-}
+int window_width = 360 * 1.5;
+int window_height = 640 * 1.5;
+
+int state = 0; // NONE
+// ENUMS
 
 typedef enum tetris_states{
 	NONE = 0,
 	GAME_BEGIN,
 	BLOCK_CHECK,
 	BLOCK_FALLING,
+	PAUSE,
 	GAME_OVER,
 	QUIT
-
+	
 }tetris_states;
 
-static int state = NONE;
+// FUNCTIONS
 
-int tetris_init(){
-	state = GAME_BEGIN;
+void update_score(){
+	snprintf(score_str, sizeof(score_str), "%d", score);
 
-	window = SDL_CreateWindow("tetris", window_height, window_width, 0);
-	if(!window){
-		return 1;
-	}
-
-	mode = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
-	if(!mode){
-		return 3;
-	}
-
-	display_width = mode->w;
-	display_height = mode->h;
-	
-	window2center(window);
-
-	renderer = SDL_CreateRenderer(window, NULL);
-	if(!renderer){
-		return 2;
-	}
-
-	return 0;
 }
 
-
-void tetris_loop(){
-
-	while( state != QUIT ){
-
-		SDL_SetRenderDrawColor(renderer, 255, 0, 127, 0);
-		SDL_RenderClear(renderer);
-		SDL_RenderPresent(renderer);
-
-		while (SDL_PollEvent(&event) != 0){
-			if(event.type == SDL_EVENT_QUIT){
-				state = QUIT;
-			}
-		}
-
-	}
+void window_to_center(SDL_Window* window){
+	SDL_SetWindowPosition(window, display_width/2 - window_width/2, display_height/2 - window_height/2 );
 }
-
 
 void tetris_deinit(){
 	
@@ -80,21 +50,93 @@ void tetris_deinit(){
 
 }
 
+void window_init(){
+	window = SDL_CreateWindow("tetris", window_width, window_height, 0);
+	if(!window){
+		SDL_Log("Window Init failed! exiting");
+		tetris_deinit();
+	}
+
+	mode = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
+	if(!mode){
+		SDL_Log("Getting display mode failed! exiting");
+		tetris_deinit();
+	}
+
+	display_width = mode->w;
+	display_height = mode->h;
+	
+	window_to_center(window);
+}
+
+void renderer_init(){
+	renderer = SDL_CreateRenderer(window, NULL);
+	if(!renderer){
+		SDL_Log("Renderer Init failed! exiting");
+		tetris_deinit();
+	}
+}
+
+void tetris_init(){
+	state = GAME_BEGIN;
+
+	window_init();
+	renderer_init();
+	
+}
+
+void logic_loop(){
+	update_score();
+}
+
+void render_loop(){
+	// Background
+	
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(renderer);
+
+	// Score
+
+	SDL_SetRenderScale(renderer, 4.0f, 4.0f);
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+	SDL_RenderDebugText(renderer, window_width / 2 / 4.5f, window_height / 10 / 4.5f, score_str);
+
+	// Render
+
+	SDL_RenderPresent(renderer);
+
+}
+
+void event_loop(){
+	if(SDL_PollEvent(&event) != 0){
+
+		if(event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_SPACE){
+			score += 1;
+		}
+
+		if(event.type == SDL_EVENT_QUIT){
+			state = QUIT;
+		}
+	}
+}
+
+void tetris_loop(){
+
+	while( state != QUIT ){
+
+		event_loop();
+		logic_loop();
+		render_loop();
+
+	}
+}
+
+
 int main(){
 
 	tetris_init();
 	tetris_loop();
 	tetris_deinit();
-
-/*
-{
-	switch(tetris_init()){
-		case 1:
-			SDL_log("Window init failed %s", SDL_GetError());
-		case 2:
-			SDL_log("Renderer init failed %s", SDL_getError());
-	}
-*/
 
 	return 0;	 
 }
