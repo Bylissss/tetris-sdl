@@ -1,6 +1,8 @@
 #include "SDL3/SDL.h"
 #include "stdio.h"
 
+#include "tetris_blocks.h"
+
 // GLOBALS
 
 SDL_Window* window;
@@ -14,8 +16,10 @@ char score_str[32];
 int display_width;
 int display_height;
 
-#define WINDOW_WIDTH 360 * 1.5
-#define WINDOW_HEIGHT 640 * 1.5
+int *current_block = box;
+
+#define WINDOW_WIDTH 540
+#define WINDOW_HEIGHT 960
 
 SDL_FPoint borders[4] = { { WINDOW_WIDTH / 10 , WINDOW_HEIGHT / 10 }, 
 						  { WINDOW_WIDTH / 10 , WINDOW_HEIGHT / 10 * 9 } ,
@@ -24,7 +28,8 @@ SDL_FPoint borders[4] = { { WINDOW_WIDTH / 10 , WINDOW_HEIGHT / 10 },
  };
 
 
-int grid[10][20] = {0};
+int grid[10][20] = {1};
+SDL_FRect rect[10][20] = {0};
 
 int state = 0; // NONE
 // ENUMS
@@ -41,6 +46,18 @@ typedef enum tetris_states{
 }tetris_states;
 
 // FUNCTIONS
+
+void grid_to_rects(){
+	for (int i = 0; i < SDL_arraysize(grid) ; i++){
+		for(int j = 0; j < SDL_arraysize(grid[j]) ; j++){
+			//SDL_Log("%d %d %d", SDL_arraysize(grid[j]), i, j);
+			rect[i][j].x =  WINDOW_WIDTH / 15 * (i + 2.5f) ;
+			rect[i][j].y =  WINDOW_WIDTH / 15 * (j + 3);
+			rect[i][j].h =  WINDOW_WIDTH / 15 - 4;
+			rect[i][j].w =  WINDOW_WIDTH / 15 - 4;
+		}
+	}
+}
 
 void update_score(){
 	snprintf(score_str, sizeof(score_str), "%d", score);
@@ -100,9 +117,13 @@ void logic_init(){
 
 void logic_loop(){
 	update_score();
+	grid_to_rects();
 }
 
 void render_loop(){
+
+	SDL_SetRenderVSync(renderer, 1);
+
 	// Background
 	
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -112,12 +133,24 @@ void render_loop(){
 
 	SDL_SetRenderScale(renderer, 4.0f, 4.0f);
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	SDL_RenderDebugText(renderer, WINDOW_WIDTH / 2 / 4.3f, WINDOW_HEIGHT / 10 / 4.3f, score_str);
+	SDL_RenderDebugText(renderer, WINDOW_WIDTH / 2 / 4.3f, WINDOW_HEIGHT / 20 / 4.3f, score_str);
 	SDL_SetRenderScale(renderer, 1.0f, 1.0f);
 
-	// Lines(
+	// Lines
 
-	SDL_RenderLines(renderer, borders, SDL_arraysize(borders) );
+	SDL_RenderLines( renderer, borders, SDL_arraysize(borders) );
+
+	// Grid
+
+	for (int i = 0; SDL_arraysize(rect) > i ;i++){
+		SDL_RenderRects(renderer, rect[i], SDL_arraysize(rect[i]));
+	}
+
+	for (int i = 0; i < SDL_arraysize(grid) ; i++){
+		for(int j = 0; j < SDL_arraysize(grid[j]) ; j++){
+			SDL_Log("Filled %d %d", i, j);
+		}
+	}
 
 	// Render
 
@@ -128,8 +161,21 @@ void render_loop(){
 void event_loop(){
 	if(SDL_PollEvent(&event) != 0){
 
-		if(event.type == SDL_EVENT_KEY_DOWN && event.key.scancode == SDL_SCANCODE_SPACE){
-			score += 1;
+		if(event.type == SDL_EVENT_KEY_DOWN){
+			if(event.key.scancode == SDL_SCANCODE_A){
+
+			}
+
+			if (event.key.scancode == SDL_SCANCODE_S){
+			
+			}
+
+			if (event.key.scancode == SDL_SCANCODE_D)
+			{
+
+			}
+			
+			 
 		}
 
 		if(event.type == SDL_EVENT_QUIT){
